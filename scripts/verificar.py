@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import textwrap
 
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
@@ -21,8 +22,10 @@ def capturar(nombre, contenido):
                      + '</h1><p>Captura de un visor local de salida real. Log completo adjunto.</p><pre>'
                      + html.escape(contenido) + '</pre>', encoding='utf-8')
     chrome = Path(os.environ.get('CHROME', r'C:\Program Files\Google\Chrome\Application\chrome.exe'))
+    lineas = sum(max(1, len(textwrap.wrap(linea, 130))) for linea in contenido.splitlines())
+    altura = max(1000, min(16000, 220 + lineas * 23))
     subprocess.run([str(chrome), '--headless', '--disable-gpu', '--no-pdf-header-footer',
-                    '--hide-scrollbars', '--window-size=1440,1600',
+                    '--hide-scrollbars', f'--window-size=1440,{altura}',
                     '--user-data-dir=' + str(temporal / 'chrome'),
                     '--screenshot=' + str(EVIDENCIA / (nombre + '.png')), visor.as_uri()],
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=45, check=True)
@@ -36,7 +39,7 @@ def main():
     salida = '$ ' + ' '.join(comando) + '\n' + resultado.stdout + '\nExit code: ' + str(resultado.returncode)
     (EVIDENCIA / (nombre + '.log')).write_text(salida, encoding='utf-8')
     print('\n'.join(salida.splitlines()[-30:]))
-    capturar(nombre, '\n'.join(salida.splitlines()[-48:]))
+    capturar(nombre, salida if 'checkpoints' in nombre else '\n'.join(salida.splitlines()[-48:]))
     sys.exit(resultado.returncode)
 
 
