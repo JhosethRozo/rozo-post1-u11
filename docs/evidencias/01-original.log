@@ -1,0 +1,23 @@
+$ C:\apache-maven-3.9.14\bin\mvn.cmd -B compile
+Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< com.universidad:refactoring-u11 >-------------------
+[INFO] Building refactoring-u11 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ refactoring-u11 ---
+[INFO] skip non existing resourceDirectory C:\Users\Public\Dev\Asignaturas\Patrones de diseño\Practica\rozo-post1-u11\src\main\resources
+[INFO] skip non existing resourceDirectory C:\Users\Public\Dev\Asignaturas\Patrones de diseño\Practica\rozo-post1-u11\src\main\resources
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ refactoring-u11 ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.329 s
+[INFO] Finished at: 2026-11-12T23:24:46-05:00
+[INFO] ------------------------------------------------------------------------
+
+Exit code: 0
