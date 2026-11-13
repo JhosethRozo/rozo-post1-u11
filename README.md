@@ -75,3 +75,18 @@ de caracterización», aunque nombra tres clases; aquí se conservan las tres co
 Las capturas son fotografías de un visor HTML local que muestra logs reales;
 no son capturas de un IDE ni resultados simulados. Los logs completos quedan
 versionados junto a cada PNG; `scripts/verificar.py` ejecuta y captura comandos.
+
+## Parte 2 — Diagnóstico del acoplamiento
+
+Antes de corregirlo (`p2-ciclo`), compila y las 25 pruebas de negocio pasan;
+el guard del colaborador opcional conserva el uso directo sin Spring.
+La prueba `ArquitecturaPaquetesTest` detecta el ciclo entre paquetes:
+
+```mermaid
+graph LR
+    inventario -->|InventarioService importa ReporteBajoStockService| reportes
+    reportes -->|ReporteBajoStockService importa InventarioService| inventario
+```
+
+El error de diseño no es un fallo funcional: dos paquetes se conocen mutuamente.
+Se conserva un commit explícitamente en rojo como evidencia previa a la solución.
