@@ -1,0 +1,70 @@
+$ python scripts/checkpoints.py
+original: actualizarInventario = 44 lineas fisicas, CC=12
+    public String actualizarInventario(Long productoId, int cantidad, String tipoMovimiento) {
+
+        // Validacion de entrada (deberia ser responsabilidad propia)
+        if (productoId == null || cantidad == 0
+                || (!tipoMovimiento.equals("ENTRADA") && !tipoMovimiento.equals("SALIDA"))) {
+            return "ERROR_DATOS_INVALIDOS";
+        }
+
+        // Busqueda del producto (mezclada con la logica de negocio)
+        Producto producto = null;
+        for (Producto p : productos) {
+            if (p.getId().equals(productoId)) { producto = p; break; }
+        }
+        if (producto == null) return "ERROR_PRODUCTO_NO_EXISTE";
+
+        // Actualizacion de stock
+        int nuevoStock;
+        if (tipoMovimiento.equals("ENTRADA")) {
+            nuevoStock = producto.getStock() + cantidad;
+        } else {
+            nuevoStock = producto.getStock() - cantidad;
+            if (nuevoStock < 0) return "ERROR_STOCK_INSUFICIENTE";
+        }
+        producto.setStock(nuevoStock);
+
+        // Calculo de cantidad de reorden (otra responsabilidad distinta)
+        boolean necesitaReorden = nuevoStock < producto.getStockMinimo();
+        int cantidadReorden = necesitaReorden
+                ? (producto.getStockMinimo() * 3) - nuevoStock : 0;
+
+        // Registro del movimiento (responsabilidad de auditoria)
+        String registro = tipoMovimiento + " de " + cantidad + " unidades de "
+                + producto.getNombre() + " -> stock final: " + nuevoStock;
+        movimientos.add(registro);
+        System.out.println(registro);
+
+        // Decision de alerta (responsabilidad de notificacion)
+        if (necesitaReorden) {
+            System.out.println("ALERTA: " + producto.getNombre()
+                    + " bajo stock minimo. Reordenar " + cantidadReorden + " unidades.");
+            return "OK_BAJO_STOCK_REORDEN_" + cantidadReorden;
+        }
+        return "OK_" + nuevoStock;
+    }
+actual: actualizarInventario = 10 lineas fisicas, CC=5
+    public String actualizarInventario(Long productoId, int cantidad, String tipoMovimiento) {
+        if (datosInvalidos(productoId, cantidad, tipoMovimiento)) return "ERROR_DATOS_INVALIDOS";
+        Producto producto = buscarProducto(productoId);
+        if (producto == null) return "ERROR_PRODUCTO_NO_EXISTE";
+        int nuevoStock = calcularNuevoStock(producto, cantidad, tipoMovimiento);
+        if (tipoMovimiento.equals("SALIDA") && nuevoStock < 0) return "ERROR_STOCK_INSUFICIENTE";
+        producto.setStock(nuevoStock);
+        registrarMovimiento(producto, cantidad, tipoMovimiento);
+        return resolverResultado(producto);
+    }
+ClasificadorProducto: switch original=1, actual=0
+EtiquetadoProducto: switch original=1, actual=0
+InventarioServiceTest: INMUTABLE SHA-256=3f355672fe6543fc9e7175b416f10c481fc8be40164109ae8984bc124a63da2e
+ClasificadorProductoTest: INMUTABLE SHA-256=da6ad4145dfc4d43c14ab562b409dacb585d00be45e35d171760d8fe1c6d9796
+EtiquetadoProductoTest: INMUTABLE SHA-256=53570799942bd81302663e406e487f484e62c4f91cd0c1ad2e35caca25598209
+Dominio sin imports de reportes: OK
+093a039 feat: crear inventario con Long Method y switch duplicado
+f267910 test: agregar 25 pruebas de caracterizacion antes de refactorizar
+598bd51 refactor: eliminar Long Method extrayendo responsabilidades
+2dd6352 refactor: eliminar switch duplicado sobre TipoProducto con polimorfismo
+
+
+Exit code: 0
