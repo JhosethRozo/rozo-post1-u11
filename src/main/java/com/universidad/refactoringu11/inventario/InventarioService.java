@@ -14,8 +14,6 @@ public class InventarioService {
         productos.add(producto);
     }
 
-    // Long Method: valida, busca, actualiza stock, calcula reorden
-    // y registra/alerta, todo en un solo metodo (Bloater)
     public String actualizarInventario(Long productoId, int cantidad, String tipoMovimiento) {
         if (datosInvalidos(productoId, cantidad, tipoMovimiento)) return "ERROR_DATOS_INVALIDOS";
         Producto producto = buscarProducto(productoId);
