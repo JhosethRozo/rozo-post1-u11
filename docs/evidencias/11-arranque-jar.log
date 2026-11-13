@@ -1,0 +1,16 @@
+$ C:\Program Files\Eclipse Adoptium\jdk-17.0.15.6-hotspot\bin\java.exe -jar target/refactoring-u11-0.0.1-SNAPSHOT.jar
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.4)
+
+2026-11-12T23:33:45.323-05:00  INFO 17836 --- [           main] c.u.r.RefactoringU11Application          : Starting RefactoringU11Application v0.0.1-SNAPSHOT using Java 17.0.15 with PID 17836 (C:\Users\Public\Dev\Asignaturas\Patrones de dise�o\Practica\rozo-post1-u11\target\refactoring-u11-0.0.1-SNAPSHOT.jar started by L&R in C:\Users\Public\Dev\Asignaturas\Patrones de dise�o\Practica\rozo-post1-u11)
+2026-11-12T23:33:45.329-05:00  INFO 17836 --- [           main] c.u.r.RefactoringU11Application          : No active profile set, falling back to 1 default profile: "default"
+2026-11-12T23:33:46.062-05:00  INFO 17836 --- [           main] c.u.r.RefactoringU11Application          : Started RefactoringU11Application in 1.254 seconds (process running for 1.786)
+
+Exit code: 0

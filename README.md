@@ -90,3 +90,117 @@ graph LR
 
 El error de diseño no es un fallo funcional: dos paquetes se conocen mutuamente.
 Se conserva un commit explícitamente en rojo como evidencia previa a la solución.
+
+La ejecución real de `mvn test -Dtest=ArquitecturaPaquetesTest` produjo:
+
+```text
+Cycle detected: Slice inventario ->
+                Slice reportes ->
+                Slice inventario
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0
+BUILD FAILURE
+```
+
+Evidencia: [negocio verde con el ciclo](docs/evidencias/06-reportes-con-ciclo.log),
+[ArchUnit en rojo](docs/evidencias/07-arquitectura-rojo.log) y
+[captura del ciclo](docs/evidencias/07-arquitectura-rojo.png).
+
+## Parte 2 — Solución y decisiones
+
+### 3. Interfaz en el dominio e inversión de dependencias
+
+`inventario` es el paquete de mayor nivel: define las reglas de stock y el evento
+que necesita comunicar. `reportes` materializa una salida de ese evento. Por eso
+`NotificadorBajoStock` pertenece a `inventario`: «los paquetes de infraestructura
+dependen de dominio; dominio nunca depende de infraestructura».
+Colocarla en `reportes` mantendría la dependencia del dominio hacia infraestructura.
+El servicio conoce solo el contrato; el reporte lo implementa y consulta inventario.
+
+```mermaid
+graph LR
+    reportes -->|implementa NotificadorBajoStock y consulta InventarioService| inventario
+```
+
+Dentro del dominio, `InventarioService` usa `NotificadorBajoStock` y `Producto`.
+No hay ningún import de `reportes` dentro de `inventario`.
+La interfaz rompe el **ciclo de paquetes**; las instancias aún se relacionan en ambos
+sentidos. Se usa `@Lazy` en el parámetro del setter para que Spring inyecte un proxy
+del contrato y resuelva el colaborador al notificar. Así arranca con las referencias
+circulares deshabilitadas por defecto, sin habilitar `allow-circular-references`.
+El constructor sin argumentos y el colaborador opcional conservan la caracterización.
+
+### 4. Notificación por evento individual
+
+`notificar(Producto, int cantidadReorden)` expresa la transición que acaba de ocurrir:
+conserva la cantidad calculada para ese instante, evita volver a recorrer todo el
+inventario y permite registrar inmediatamente cada alerta. El reporte guarda texto
+como instantánea para que un cambio posterior de stock no reescriba la alerta.
+Un lote sería preferible en una reconciliación nocturna o para reducir llamadas a
+un proveedor externo con límites o costos por petición. En ese caso definiría
+eventos inmutables con sus cantidades y una operación de envío masivo.
+
+`generarReporte()` lista el stock actualmente inferior al mínimo y las alertas
+registradas desde el arranque. No vacía el historial al leerlo. Se excluye el stock
+igual al mínimo y se conserva el orden de inserción. Los datos son en memoria,
+acorde con el laboratorio; no se añade persistencia.
+
+## Verificación consolidada y entregables
+
+Después de DIP, **sin cambiar la prueba de arquitectura**:
+
+```text
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+Ver [ArchUnit en verde](docs/evidencias/08-arquitectura-verde.log) y su
+[captura](docs/evidencias/08-arquitectura-verde.png).
+La suite final `mvn clean verify` recompila, ejecuta y empaqueta:
+
+```text
+Tests run: 30, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+Son las **25 pruebas originales intactas**, 1 de arquitectura, 3 de reportes y 1 de
+integración Spring. Las adicionales comprueban notificación efectiva, reporte vacío,
+umbral, alerta histórica y arranque real. Ver [log final](docs/evidencias/09-suite-final.log)
+y [captura final](docs/evidencias/09-suite-final.png).
+La [auditoría final de checkpoints](docs/evidencias/10-checkpoints-final.log)
+([captura](docs/evidencias/10-checkpoints-final.png)) comprueba las 10 líneas, la
+eliminación de switches, los hashes originales y la dirección de dependencias.
+El [JAR también se ejecutó correctamente](docs/evidencias/11-arranque-jar.log)
+([captura](docs/evidencias/11-arranque-jar.png)), con salida 0.
+
+![Ciclo detectado antes de DIP](docs/evidencias/07-arquitectura-rojo.png)
+![Arquitectura sin ciclos después de DIP](docs/evidencias/08-arquitectura-verde.png)
+
+| Requisito / rúbrica | Comprobación |
+|---|---|
+| Implementación (40%) | Extract Method, polimorfismo enum, interfaz de dominio y ArchUnit sin ciclos |
+| Funcionalidad (25%) | 25 pruebas antes de tocar producción; 5 extracciones verdes; rojo/verde arquitectónico; 30 finales |
+| Documentación (20%) | Métricas reproducibles, logs y PNG, dos diagramas y cuatro decisiones justificadas |
+| Estilo (15%) | Nombres Java, firmas públicas originales, cero switch/if por tipo y cero import de reportes en dominio |
+| Proyecto único | `pom.xml` y `src/` directamente en la raíz; Java 17; JAR; sin Web ni Data |
+| Historial por partes | Etiquetas `p1-original`, `p1-caracterizacion`, `p1-extract-method`, `p1-polimorfismo`, `p1-completa`, `p2-ciclo`, `p2-arquitectura-rojo`, `p2-dip` |
+| Capturas de checkpoints | PNG y log por paso en [docs/evidencias](docs/evidencias), incluidos cada extracción y el fallo intencional |
+| Entrega | [Repositorio público rozo-post1-u11](https://github.com/JhosethRozo/rozo-post1-u11) |
+
+Para revisar el rojo de forma aislada, crear otro clon y seleccionar
+`git checkout p2-arquitectura-rojo`; allí las pruebas de negocio pasan y ArchUnit
+falla intencionalmente. Volver a `main` para evaluar el estado final.
+`git diff p1-caracterizacion -- src/test/java/com/universidad/refactoringu11/inventario/`
+no debe producir salida. `python scripts/checkpoints.py` verifica además los SHA-256.
+
+Las validaciones locales usaron Maven 3.9.14 y JDK 17.0.15. En este equipo Windows,
+el directorio temporal del usuario contiene `&`: antes de ejecutar Maven se asignó
+`TEMP` y `TMP` a `.tmp` dentro del proyecto para evitar que el shell de Surefire
+cortara el argumento. No es necesario en sistemas con rutas temporales normales.
+Los scripts de captura requieren Python 3 y Chrome; no son necesarios para compilar.
+GitHub Actions vuelve a comprobar todo con Java 17 en Linux.
+
+El nombre exigido por la actividad es `rozo-post1-u11`: se usa ese repositorio público
+existente, integrando su commit inicial y ampliando su `.gitignore`. La entrega `u10`
+se conserva. El proyecto usa la configuración Maven/Spring Boot indicada por el
+enunciado; el esqueleto se creó localmente, sin atribuirle una generación web.
+Para entregar, copiar el enlace de `u11` en el Aula virtual UDES antes del plazo.
