@@ -1,0 +1,4 @@
+$ gh run view 43366383048 --repo JhosethRozo/rozo-post1-u11 --json status,conclusion,url,headSha
+{"conclusion":"success","headSha":"af3f9436b99dbbac7759bb7fd303ddc350f0e5ce","status":"completed","url":"https://github.com/JhosethRozo/rozo-post1-u11/actions/runs/43366383048"}
+
+Exit code: 0

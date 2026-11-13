@@ -198,6 +198,10 @@ el directorio temporal del usuario contiene `&`: antes de ejecutar Maven se asig
 cortara el argumento. No es necesario en sistemas con rutas temporales normales.
 Los scripts de captura requieren Python 3 y Chrome; no son necesarios para compilar.
 GitHub Actions vuelve a comprobar todo con Java 17 en Linux.
+La [ejecución externa de la entrega](https://github.com/JhosethRozo/rozo-post1-u11/actions/runs/43366383048)
+terminó en **success**, incluidas las 30 pruebas y la auditoría de checkpoints.
+Se adjuntan [log](docs/evidencias/12-github-actions.log) y
+[captura de la consulta real a GitHub](docs/evidencias/12-github-actions.png).
 
 El nombre exigido por la actividad es `rozo-post1-u11`: se usa ese repositorio público
 existente, integrando su commit inicial y ampliando su `.gitignore`. La entrega `u10`
